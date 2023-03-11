@@ -55,7 +55,7 @@ def recovery_days(tot_ret):
 
         # Remove all previous elements from the stack whose value
         # is less than the current element from the time-series.
-        while len(stack) > 0 and stack[-1][1] < cur_val:
+        while stack and stack[-1][1] < cur_val:
             # Pop a previously seen element from the stack.
             last_idx, last_val = stack.pop()
 

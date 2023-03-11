@@ -93,13 +93,7 @@ def annualized_returns(series, years):
     # So on average a year has 365.25 days.
     days = int(years * 365.25)
 
-    # Calculate annualized returns for all periods of this length.
-    # Note: It is important we have daily (interpolated) data,
-    # otherwise the series.shift(365) would shift much more than
-    # a year, if the data only contains e.g. 250 days per year.
-    ann_return = (series.shift(-days) / series) ** (1 / years) - 1.0
-
-    return ann_return
+    return (series.shift(-days) / series) ** (1 / years) - 1.0
 
 
 def prepare_ann_returns(df, years, key=PSALES, subtract=None):
@@ -253,9 +247,7 @@ def mean_std_ann_returns(series, min_years=7, max_years=15,
 
     # Create a Pandas DataFrame with the result.
     data = {MEAN_ANN_RETURN: mean_ann_rets, STD_ANN_RETURN: std_ann_rets}
-    df_result = pd.DataFrame(data=data, index=series.index[0:num_days])
-
-    return df_result
+    return pd.DataFrame(data=data, index=series.index[:num_days])
 
 
 def prepare_mean_ann_returns(df, min_years=7, max_years=15, key=PSALES):
@@ -306,10 +298,10 @@ def prepare_mean_ann_returns(df, min_years=7, max_years=15, key=PSALES):
     common_len = min(len(df_mean_ann_rets), len(df_key))
 
     # The predictive signal e.g. P/Sales.
-    x = df_key[0:common_len]
+    x = df_key[:common_len]
 
     # The mean annualized returns.
-    y = df_mean_ann_rets[MEAN_ANN_RETURN].iloc[0:common_len]
+    y = df_mean_ann_rets[MEAN_ANN_RETURN].iloc[:common_len]
 
     return x, y
 
@@ -391,10 +383,7 @@ def daily_returns(df, start_date, end_date):
     # Get the Total Return for this date-range.
     tot_ret = df[TOTAL_RETURN][start_date:end_date]
 
-    # Calculate the daily returns assuming we have daily data.
-    daily_ret = tot_ret.shift(-1) / tot_ret
-
-    return daily_ret
+    return tot_ret.shift(-1) / tot_ret
 
 
 def reinvestment_growth(df, smooth=True):
@@ -467,14 +456,11 @@ def max_drawdown(df, window=None):
     :return:
         Pandas DataFrame with the Max Drawdown time-series.
     """
-    if window is None:
-        # Calculate Max Drawdown from the beginning.
-        max_dd = df / df.cummax() - 1.0
-    else:
-        # Calculate Max Drawdown for a rolling window.
-        max_dd = df / df.rolling(window=window).max() - 1.0
-
-    return max_dd
+    return (
+        df / df.cummax() - 1.0
+        if window is None
+        else df / df.rolling(window=window).max() - 1.0
+    )
 
 
 def max_pullup(df, window=None):
@@ -509,14 +495,11 @@ def max_pullup(df, window=None):
     :return:
         Pandas DataFrame with the Max Pullup time-series.
     """
-    if window is None:
-        # Calculate Max Pullup from the beginning.
-        max_pu = df / df.cummin() - 1.0
-    else:
-        # Calculate Max Pullup for a rolling window.
-        max_pu = df / df.rolling(window=window).min() - 1.0
-
-    return max_pu
+    return (
+        df / df.cummin() - 1.0
+        if window is None
+        else df / df.rolling(window=window).min() - 1.0
+    )
 
 
 ########################################################################

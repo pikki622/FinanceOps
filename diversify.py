@@ -130,25 +130,32 @@ def _check_pandas_index(weights_org, corr, weights_guess=None):
     # Error message.
     msg = 'Mismatch in index / column names for Pandas data.'
 
-    # Check weights_org and corr.
-    if is_pandas_org and is_pandas_corr:
-        if not (weights_org.index.equals(corr.index) and
-                weights_org.index.equals(corr.columns)):
+    if is_pandas_org:
+        if is_pandas_corr and not (
+            weights_org.index.equals(corr.index)
+            and weights_org.index.equals(corr.columns)
+        ):
             raise ValueError(msg)
 
-    # Check weights_org and weights_guess.
-    if is_pandas_org and is_pandas_guess:
-        if not weights_org.index.equals(weights_guess.index):
+        if is_pandas_guess and not weights_org.index.equals(
+            weights_guess.index
+        ):
             raise ValueError(msg)
 
     # Check weights_guess and corr.
     # This is only necessary if weights_org is not a Pandas data-type,
     # otherwise we would already know that weights_org matches corr and
     # weights_org matches weights_guess, therefore weights_guess matches corr.
-    if (not is_pandas_org) and is_pandas_guess and is_pandas_corr:
-        if not (weights_guess.index.equals(corr.index) and
-                weights_guess.index.equals(corr.columns)):
-            raise ValueError(msg)
+    if (
+        (not is_pandas_org)
+        and is_pandas_guess
+        and is_pandas_corr
+        and not (
+            weights_guess.index.equals(corr.index)
+            and weights_guess.index.equals(corr.columns)
+        )
+    ):
+        raise ValueError(msg)
 
 
 @jit
@@ -179,8 +186,9 @@ def _find_weight_problem(weights_org, weights_new):
         # Check if there is a problem and then return the corresponding index.
         # We must ensure the weight signs are equal and magnitudes are valid.
         # But because np.sign(0.0)==0.0 the check for signs is a bit awkward.
-        if (np.sign(w_new) != 0.0 and np.sign(w_new) != np.sign(w_org)) or \
-                (np.abs(w_new) > np.abs(w_org)):
+        if np.sign(w_new) not in [0.0, np.sign(w_org)] or np.abs(
+            w_new
+        ) > np.abs(w_org):
             return i
 
     # No problems were found.
@@ -376,13 +384,7 @@ def _full_exposure_numpy(weights, corr):
     # need to take the absolute values to ensure the result is positive.
     corr_weights = np.abs(corr_weights * corr)
 
-    # The elements of the corr_weights matrix are all positive.
-    # So we can sum each row, take the square-root, and then
-    # restore the proper sign from the weights. This gives an
-    # array with the Full Exposure of each asset.
-    full_exp = np.sign(weights) * np.sqrt(np.sum(corr_weights, axis=1))
-
-    return full_exp
+    return np.sign(weights) * np.sqrt(np.sum(corr_weights, axis=1))
 
 
 ########################################################################
@@ -868,7 +870,7 @@ def adjust_weights(weights_org, corr, weights_guess=None, fillna=True, log=None,
 
     # Repeat for a number of iterations or until convergence
     # which breaks out of the for-loop further below.
-    for i in range(max_iter):
+    for _ in range(max_iter):
         # Update the array weights_new inplace.
         max_abs_dif = _update_weights(weights_org=weights_org,
                                       weights_new=weights_new, corr=corr)
@@ -949,11 +951,9 @@ def log_to_dataframe(weights_org, corr, log):
     # Generate names for the columns.
     names = []
     for i in range(1, num_assets + 1):
-        names.append(f'Weight {i}')
-        names.append(f'Full Exp. {i}')
-
+        names.extend((f'Weight {i}', f'Full Exp. {i}'))
     # Index for the rows.
-    index = pd.Series(data=list(range(0, num_iterations)), name='Iteration')
+    index = pd.Series(data=list(range(num_iterations)), name='Iteration')
 
     # Create Pandas DataFrame with the data.
     df = pd.DataFrame(data=data, columns=names, index=index)

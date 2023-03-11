@@ -61,13 +61,9 @@ def _load_data(path):
     :param path: Path for the data-file.
     :return: Pandas DataFrame.
     """
-    data = pd.read_csv(path,
-                       sep="\t",
-                       index_col=0,
-                       parse_dates=True,
-                       dayfirst=False)
-
-    return data
+    return pd.read_csv(
+        path, sep="\t", index_col=0, parse_dates=True, dayfirst=False
+    )
 
 
 def _load_price_yahoo(ticker):
@@ -111,10 +107,7 @@ def _load_price_yahoo(ticker):
     # Select the columns we need.
     price = price[[TOTAL_RETURN, SHARE_PRICE]]
 
-    # Interpolate to get prices for all days.
-    price_daily = _resample_daily(price)
-
-    return price_daily
+    return _resample_daily(price)
 
 
 def _load_earnings_per_share(ticker, df, profit_margin=True):
@@ -257,10 +250,7 @@ def load_usa_cpi():
     data.index.name = "Date"
     data.rename(columns={"Value": CPI}, inplace=True)
 
-    # Resample by linear interpolation to get daily values.
-    data_daily = _resample_daily(data[CPI])
-
-    return data_daily
+    return _resample_daily(data[CPI])
 
 
 def load_usa_gov_bond_1year():
@@ -283,10 +273,7 @@ def load_usa_gov_bond_1year():
     # Scale the data so for example 0.035 in the data means 3.5%
     bond_yields /= 100
 
-    # Resample by linear interpolation to get daily values.
-    bond_yields_daily = _resample_daily(bond_yields)
-
-    return bond_yields_daily
+    return _resample_daily(bond_yields)
 
 
 def load_index_data(ticker, sales=True, book_value=True, dividend_TTM=True):

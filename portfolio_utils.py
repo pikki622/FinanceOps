@@ -61,9 +61,10 @@ def check_normalized_weights(weights_norm, cash, tol=1e-9):
 
     # If there is any significant error then raise exception.
     if np.any(err_mask):
-        msg = f'Checking the normalized weights failed: ' + \
-              f'weights_norm_sum={weights_norm_sum[err_mask]}, ' + \
-              f'cash={cash_array[err_mask]}'
+        msg = (
+            f'Checking the normalized weights failed: weights_norm_sum={weights_norm_sum[err_mask]}, '
+            + f'cash={cash_array[err_mask]}'
+        )
         raise RuntimeError(msg)
 
 
@@ -151,11 +152,7 @@ def weighted_returns(returns, weights, cash):
     # This is a Pandas Series.
     port_rets = weighted_rets.sum(axis=1)
 
-    # Cumulative portfolio returns.
-    # This is a Pandas Series.
-    port_cum_rets = (port_rets + cash).cumprod()
-
-    return port_cum_rets
+    return (port_rets + cash).cumprod()
 
 
 ########################################################################

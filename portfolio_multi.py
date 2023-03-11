@@ -425,7 +425,7 @@ class AdaptiveWeights(Model):
         :param params: 1-d numpy array with the model parameters.
         :return: None.
         """
-        self._a = params[0:self.num_stocks]
+        self._a = params[:self.num_stocks]
         self._b = params[self.num_stocks:]
 
     def get_weights(self, signals):
